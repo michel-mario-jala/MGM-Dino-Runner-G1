@@ -3,8 +3,10 @@ from dino_runner.components.score import Score
 from dino_runner.components.dinosaur import Dinosaur
 from dino_runner.components.obstacles.obstacleManager import ObstacleManager
 from dino_runner.utils.constants import BG, DINO_START, ICON, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
+from dino_runner.components.menu import Menu
 
 class Game:
+    SCORE_MAX = 0
     
     def __init__(self):
         pygame.init()
@@ -21,6 +23,7 @@ class Game:
         self.player = Dinosaur()
         self.osbtacle_manager = ObstacleManager()  
         self.score = Score()
+        self.menu = Menu()
         self.death_count = 0  
          
     def run(self):
@@ -44,6 +47,7 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.playing = False
+                self.running = False
 
     def update(self):
         user_input = pygame.key.get_pressed()
@@ -75,7 +79,7 @@ class Game:
         pygame.time.delay(500)
         self.playing = False
         self.death_count += 1
-    
+        
     def show_menu(self):
         center_x = SCREEN_WIDTH // 2
         center_y = SCREEN_HEIGHT // 2
@@ -83,17 +87,14 @@ class Game:
         self.screen.fill((255, 255, 255))
         #agregar texto de inicio en la pantalla
         if self.death_count == 0:
-            font = pygame.font.Font('freesansbold.ttf', 30)
-            text = font.render("Prees any key to start.", True, (0,0,0))
-            text_rect = text.get_rect()
-            text_rect.center = (center_x, center_y)
-            self.screen.blit(text, text_rect)
-            #agregar imagen en la pantalla
+            self.menu.update_menu(('freesansbold.ttf', 30), ("Prees any key to Start.", True, (0,0,0)) , center_x, center_y, self.screen )
             self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
         else:
-            print(self.death_count)
-            return
-        
+            self.menu.update_menu(('freesansbold.ttf', 30), ("Prees any key to Restart.", True, (0,0,0)) , center_x, center_y, self.screen )
+            self.menu.update_menu(('freesansbold.ttf', 30), ((f"Score: {self.score.score}"), True, (0,0,0)) , center_x, (center_y + 50), self.screen )
+            self.menu.update_menu(('freesansbold.ttf', 30), ((f"Highest score: {self.score_max()}"), True, (0,0,0)) , center_x, (center_y + 100), self.screen )
+            self.menu.update_menu(('freesansbold.ttf', 30), ((f"Number of deaths : {self.death_count}"), True, (0,0,0)) , center_x, (center_y + 150), self.screen )
+            self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
         #refrescar pantalla
         pygame.display.update()
         #manejar eventos
@@ -102,7 +103,24 @@ class Game:
     def handle_menu_events(self):
           for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.playing = False 
+                self.running = False 
             elif event.type == pygame.KEYDOWN:
+                self.score.score = 0
                 self.play()     
+    
+    def score_max(self):
+        if self.playing == False: 
+            if self.score.score > self.SCORE_MAX:
+                self.SCORE_MAX = self.score.score
         
+        return self.SCORE_MAX        
+          
+        #self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
+        #font = pygame.font.Font('freesansbold.ttf', 30)
+        #text = font.render("Prees any key to start.", True, (0,0,0))
+        #text_rect = text.get_rect()
+        #text_rect.center = (center_x, center_y)
+        #self.screen.blit(text, text_rect)
+        #agregar imagen en la pantalla
+        #self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
+          
