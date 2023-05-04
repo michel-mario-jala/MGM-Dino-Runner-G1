@@ -13,7 +13,7 @@ class PowerUp:
         self.rect.y = random.randint(100, 150)
         
         self.start_time = 0
-        self.duretion = random(3, 5)
+        self.duretion = random.randint(4, 8)
         
     def update(self, game_speed, power_ups):
         self.rect.x -= game_speed

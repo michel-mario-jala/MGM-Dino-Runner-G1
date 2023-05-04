@@ -1,16 +1,16 @@
 import pygame
 from pygame.sprite import Sprite
 from dino_runner.components.menu import update_menu
-from dino_runner.utils.constants import DEFAULT_TYPE, DUCKING, DUCKING_SHIELD, JUMPING, JUMPING_SHIELD, RUNNING, RUNNING_SHIELD, SHIELD_TYPE
+from dino_runner.utils.constants import DEFAULT_TYPE, DUCKING, DUCKING_HAMMER, DUCKING_SHIELD, HAMMER_TYPE, JUMPING, JUMPING_HAMMER, JUMPING_SHIELD, RUNNING, RUNNING_HAMMER, RUNNING_SHIELD, SHIELD_TYPE
 
 JUMP_VELOCITY = 8.5
 DINO_RUNNING = "running"
 DINO_JUMPING = "jumping"
 DINO_DUCKING = "ducking"
 
-DUCKING_IMG = {DEFAULT_TYPE : DUCKING, SHIELD_TYPE : DUCKING_SHIELD}
-JUMPING_IMG = {DEFAULT_TYPE : JUMPING, SHIELD_TYPE : JUMPING_SHIELD}
-RUNNING_IMG = {DEFAULT_TYPE : RUNNING, SHIELD_TYPE : RUNNING_SHIELD}
+DUCKING_IMG = {DEFAULT_TYPE : DUCKING, SHIELD_TYPE : DUCKING_SHIELD, HAMMER_TYPE: DUCKING_HAMMER}
+JUMPING_IMG = {DEFAULT_TYPE : JUMPING, SHIELD_TYPE : JUMPING_SHIELD, HAMMER_TYPE: JUMPING_HAMMER}
+RUNNING_IMG = {DEFAULT_TYPE : RUNNING, SHIELD_TYPE : RUNNING_SHIELD, HAMMER_TYPE: RUNNING_HAMMER}
 
 class Dinosaur(Sprite):
     POS_X = 80
@@ -74,7 +74,7 @@ class Dinosaur(Sprite):
     
     def on_pick_power_up(self, power_up):
         self.type = power_up.type
-        self.power_up_time_up = power_up.star_time + (power_up.duration * 1000)
+        self.power_up_time_up = power_up.start_time + (power_up.duretion * 1000)
         print("powerUPps")
         print(power_up.type)
     
@@ -83,7 +83,7 @@ class Dinosaur(Sprite):
             time_to_show = round((self.power_up_time_up - pygame.time.get_ticks()) / 1000, 2)
             if time_to_show >= 0:
                 update_menu(
-                    f"{screen, self.type.capitalize()} enable for {time_to_show} seconds.",
+                    screen, f"{self.type.capitalize()} enable for {time_to_show} seconds.",
                     font_size = 22,
                     pos_y_center = 50)    
             else:

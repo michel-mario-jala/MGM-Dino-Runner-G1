@@ -3,11 +3,10 @@ from dino_runner.components.power_ups.power_up_manager import PowerUpManager
 from dino_runner.components.score import Score
 from dino_runner.components.dinosaur import Dinosaur
 from dino_runner.components.obstacles.obstacleManager import ObstacleManager
-from dino_runner.utils.constants import BG, DINO_START, ICON, RESET, SCREEN_HEIGHT, SCREEN_WIDTH, SHIELD_TYPE, TITLE, FPS
+from dino_runner.utils.constants import BG, CACTUS_HAMMER, DINO_START, GAME_OVER, HAMMER_TYPE, ICON, RESET, SCREEN_HEIGHT, SCREEN_WIDTH, SHIELD_TYPE, TITLE, FPS
 from dino_runner.components.menu import update_menu
-
+         
 class Game:
-    SCORE_MAX = 0
     
     def __init__(self):
         pygame.init()
@@ -24,7 +23,8 @@ class Game:
         self.player = Dinosaur()
         self.osbtacle_manager = ObstacleManager()  
         self.score = Score()
-        self.death_count = 0 
+        self.death_count = 0
+        self.max_score = 0 
         self.power_up_manager = PowerUpManager()
          
     def run(self):
@@ -47,6 +47,7 @@ class Game:
         self.playing = True
         self.osbtacle_manager.reset()
         self.score.reset()
+        self.game_speed = 20
         self.power_up_manager.reset()
                 
     def events(self):
@@ -86,8 +87,13 @@ class Game:
     def on_death(self):
         print("BOOMM")
         is_invincible = self.player.type == SHIELD_TYPE
-        if not is_invincible:
+        hammer_power = self.player.type == HAMMER_TYPE
+        if hammer_power :
+            self.hammer_power_up(self.game_speed, self.player, self.osbtacle_manager.obstacles)
+            
+        elif not is_invincible and not hammer_power:
             pygame.time.delay(500)
+            
             self.playing = False
             self.death_count += 1
         
@@ -120,17 +126,18 @@ class Game:
     
     def score_max(self):
         if self.playing == False: 
-            if self.score.score > self.SCORE_MAX:
-                self.SCORE_MAX = self.score.score
+            if self.score.score > self.max_score:
+                self.max_score = self.score.score
         
-        return self.SCORE_MAX        
+        return self.max_score        
           
-        #self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
-        #font = pygame.font.Font('freesansbold.ttf', 30)
-        #text = font.render("Prees any key to start.", True, (0,0,0))
-        #text_rect = text.get_rect()
-        #text_rect.center = (center_x, center_y)
-        #self.screen.blit(text, text_rect)
-        #agregar imagen en la pantalla
-        #self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
+    def hammer_power_up(self, game_speed, player, obstacles):
+        user_input = pygame.key.get_pressed()
+        for obstacle in obstacles:
+            obstacle.update(game_speed, obstacles)
+            if player.rect.colliderect(obstacle.rect):
+                if user_input[pygame.K_RIGHT]:
+                    obstacles.append(CACTUS_HAMMER[0])
+                    #self.osbtacle_manager.reset()        
+    
           
