@@ -1,9 +1,10 @@
 import pygame
+from dino_runner.components.power_ups.power_up_manager import PowerUpManager
 from dino_runner.components.score import Score
 from dino_runner.components.dinosaur import Dinosaur
 from dino_runner.components.obstacles.obstacleManager import ObstacleManager
-from dino_runner.utils.constants import BG, DINO_START, ICON, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
-from dino_runner.components.menu import Menu
+from dino_runner.utils.constants import BG, DINO_START, ICON, RESET, SCREEN_HEIGHT, SCREEN_WIDTH, SHIELD_TYPE, TITLE, FPS
+from dino_runner.components.menu import update_menu
 
 class Game:
     SCORE_MAX = 0
@@ -23,8 +24,8 @@ class Game:
         self.player = Dinosaur()
         self.osbtacle_manager = ObstacleManager()  
         self.score = Score()
-        self.menu = Menu()
-        self.death_count = 0  
+        self.death_count = 0 
+        self.power_up_manager = PowerUpManager()
          
     def run(self):
         self.running = True
@@ -36,13 +37,18 @@ class Game:
         
     def play(self):
          # Game loop: events - update - draw
-        self.playing = True
-        self.osbtacle_manager.reset()
+        self.reset_game()
         while self.playing:
             self.events()
             self.update()
             self.draw()
-            
+    
+    def reset_game(self):
+        self.playing = True
+        self.osbtacle_manager.reset()
+        self.score.reset()
+        self.power_up_manager.reset()
+                
     def events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -54,6 +60,7 @@ class Game:
         self.player.update(user_input)
         self.osbtacle_manager.update(self.game_speed, self.player, self.on_death)
         self.score.update(self)
+        self.power_up_manager.update(self.game_speed, self.score.score, self.player)
 
     def draw(self):
         self.clock.tick(FPS)
@@ -62,6 +69,8 @@ class Game:
         self.player.draw(self.screen)
         self.osbtacle_manager.draw(self.screen)
         self.score.draw(self.screen)
+        self.power_up_manager.draw(self.screen)
+        self.player.draw_power_up(self.screen)
         pygame.display.update()
         pygame.display.flip()
 
@@ -76,9 +85,11 @@ class Game:
 
     def on_death(self):
         print("BOOMM")
-        pygame.time.delay(500)
-        self.playing = False
-        self.death_count += 1
+        is_invincible = self.player.type == SHIELD_TYPE
+        if not is_invincible:
+            pygame.time.delay(500)
+            self.playing = False
+            self.death_count += 1
         
     def show_menu(self):
         center_x = SCREEN_WIDTH // 2
@@ -87,14 +98,14 @@ class Game:
         self.screen.fill((255, 255, 255))
         #agregar texto de inicio en la pantalla
         if self.death_count == 0:
-            self.menu.update_menu(('freesansbold.ttf', 30), ("Prees any key to Start.", True, (0,0,0)) , center_x, center_y, self.screen )
+            update_menu(self.screen, "Prees any key to Start." )
             self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
         else:
-            self.menu.update_menu(('freesansbold.ttf', 30), ("Prees any key to Restart.", True, (0,0,0)) , center_x, center_y, self.screen )
-            self.menu.update_menu(('freesansbold.ttf', 30), ((f"Score: {self.score.score}"), True, (0,0,0)) , center_x, (center_y + 50), self.screen )
-            self.menu.update_menu(('freesansbold.ttf', 30), ((f"Highest score: {self.score_max()}"), True, (0,0,0)) , center_x, (center_y + 100), self.screen )
-            self.menu.update_menu(('freesansbold.ttf', 30), ((f"Number of deaths : {self.death_count}"), True, (0,0,0)) , center_x, (center_y + 150), self.screen )
-            self.screen.blit(DINO_START, (center_x - 49, center_y - 121))
+            update_menu(self.screen, "Prees any key to Restart." )
+            update_menu(self.screen , f"Score: {self.score.score}" , pos_y_center=center_y + 50)
+            update_menu(self.screen , f"Highest score: {self.score_max()}", pos_y_center = center_y + 100)
+            update_menu(self.screen , f"Number of deaths : {self.death_count}" , pos_y_center = center_y + 150)
+            self.screen.blit(RESET, (center_x - 49, center_y - 121))
         #refrescar pantalla
         pygame.display.update()
         #manejar eventos
@@ -105,7 +116,6 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False 
             elif event.type == pygame.KEYDOWN:
-                self.score.score = 0
                 self.play()     
     
     def score_max(self):
